@@ -1,4 +1,4 @@
-# 东吴证券 AI 团队 Cookbook
+# 后端团队 Python Cookbook
 本文档旨在说明 python 语言特点，梳理后端项目 MVC 开发规范，目标是编写
 - 1. 可维护性（maintainability）
 - 2. 可读性（readability）
@@ -6,6 +6,7 @@
 - 4. 简洁性（simplicity）
 - 5. 可复用性（reusability）
 - 6. 可测试性（testability）的高质量代码。
+
 优先级逐渐递减
 
 # 说明

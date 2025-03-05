@@ -20,7 +20,11 @@ else
 fi
 
 DATE=$(date +"%Y%m%d")
-TAG=${branch_suffix}_${DATE}
+
+# 获取当前的 git commit ID
+commit_id=$(git rev-parse --short HEAD)
+
+TAG=${branch_suffix}_${DATE}_${commit_id}
 
 docker build -t ${IMAGE_NAME}:${TAG} -f ./docker/Dockerfile .
 docker tag ${IMAGE_NAME}:${TAG} ${REPOSITORY_NAME}${IMAGE_NAME}:${TAG}
