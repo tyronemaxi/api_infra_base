@@ -9,7 +9,6 @@ from flask import Blueprint, Flask
 from flask_restful import Api
 
 from app.routes.infrastructure.healthcheck import HealthCheckResource
-from app.routes.api.completions.chat import ChatResource
 
 # 基础设施路由，用于内部监控，健康检查相关
 infra_bp = Blueprint(name="infrastructure", import_name="infrastructure", url_prefix="/infrastructure")
@@ -21,8 +20,6 @@ api = Api(api_bp)
 
 
 infra.add_resource(HealthCheckResource, "/healthcheck")
-
-api.add_resource(ChatResource, "/chat")
 
 
 def register_blueprint(app: Flask):

@@ -142,3 +142,4 @@ cython_debug/
 *.local
 tests
 data
+.git

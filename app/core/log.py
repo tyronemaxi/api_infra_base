@@ -9,7 +9,6 @@ import os
 import sys
 import logging
 import re
-
 from loguru import logger as lg_logger
 from conf.settings import LOG_LEVEL
 
@@ -17,43 +16,58 @@ LOGGER_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 
 class InterceptHandler(logging.Handler):
-    """
-    删除日志颜色
-
-    不同框架底层方法在写入日志时,有可能被loguru判断为带颜色的日志从而进入后续处理,导致写入错误.
-    请务必保留此方法,避免日志写入导致错误.
-    """
-
     def emit(self, record):
         logger_opt = logger.opt(depth=6, exception=record.exc_info, colors=False)
-        ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")  # 删除自带的颜色
+        ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
         logger_opt.log(record.levelname, ansi_escape.sub("", record.getMessage()))
 
 
 def register_logger():
-    """注册日志到loguru，由loguru统一管理日志的格式、旋转、错误等"""
-    # [定义日志路径]
     log_dir = os.path.join(LOGGER_DIR, "log")
     os.makedirs(log_dir, exist_ok=True)
 
-    # [标准日志写入loguru] 此配置可将各库写入原生logging的日志配置入loguru,例如Flask
+    # 1. 标准日志拦截配置
     logging.basicConfig(handlers=[InterceptHandler(level="INFO")], level="INFO")
 
-    # [loguru日志输出至控制台] 对调试有帮助
-    lg_logger.configure(handlers=[{"sink": sys.stderr, "level": LOG_LEVEL}])
+    # 2. 控制台输出调整为 JSON 格式
+    lg_logger.configure(
+        handlers=[{
+            "sink": sys.stdout,  # 改为输出到 stdout（容器化部署推荐）
+            "level": LOG_LEVEL,
+            "serialize": True,  # 关键：输出 JSON 格式
+            "format": "{extra[request_id]} | {message}",  # 包含 request_id
+            "filter": lambda record: record["extra"].setdefault("request_id", "SYSTEM")
+    }]
+    )
 
-    # 日志旋转、大小限制、更替等参数均支持多种配置,详情请参考文档
-    # [logger参数文档: https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger]
-    # 请务必设置colorize=False,避免在不同系统上由于颜色标签的写入造成问题
-    lg_logger.add(log_dir + "/info_{time:%Y-%m-%d}.log", level="INFO", colorize=False, rotation="1 days",
-               retention="7 days",
-               backtrace=False, diagnose=False, encoding="utf-8")
+    # 3. 文件日志保留原有配置，但添加 Loki 所需标签
+    # (可选：如果不需要本地文件日志，可注释掉 add() 配置)
+    lg_logger.add(
+        log_dir + "/info_{time:%Y-%m-%d}.log",
+        level="INFO",
+        colorize=False,
+        rotation="1 days",
+        retention="7 days",
+        format="{message}",
+        serialize=True,
+        backtrace=False,
+        diagnose=False,
+        encoding="utf-8"
+    )
 
-    lg_logger.add(log_dir + "/error_{time:%Y-%m-%d}.log", level="ERROR", colorize=False, rotation="1 days",
-               retention="15 days",
-               backtrace=False, diagnose=False, encoding="utf-8")
-    lg_logger.add(log_dir + "/error_detail_{time:%Y-%m-%d}.log", level="ERROR", colorize=False, rotation="1 days",
-               retention="3 days", backtrace=True, diagnose=True, encoding="utf-8")
+    # Error 日志同理...
+    lg_logger.add(
+        log_dir + "/error_{time:%Y-%m-%d}.log",
+        level="ERROR",
+        colorize=False,
+        rotation="1 days",
+        retention="15 days",
+        format="{message}",  # 配合 serialize=True 使用
+        serialize=True,  # 确保文件日志也是 JSON 格式
+        backtrace=False,
+        diagnose=False,
+        encoding="utf-8"
+    )
 
     return lg_logger
 

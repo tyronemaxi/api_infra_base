@@ -8,8 +8,10 @@ Time: 2024/10/15 13:20
 from flask_restful import Resource
 
 from app.core.response import ResUtil
+from app.core.log import logger
 
 
 class HealthCheckResource(Resource, ResUtil):
     def get(self):
+        logger.info("test request")
         return self.message()

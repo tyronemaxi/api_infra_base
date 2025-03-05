@@ -39,6 +39,6 @@ debug = 'dev'
 capture_output = False
 # server 端保持连接时间(秒) 根据情况设置2-5
 keepalive = 2
-loglevel = 'warning'
+loglevel = 'info'
 accesslog = '-'
-# errorlog = GUNICORN_ERROR_LOG
+errorlog = GUNICORN_ERROR_LOG

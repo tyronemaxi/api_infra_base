@@ -1,0 +1,45 @@
+version: "3.7"
+
+services:
+  backend_api:
+    image: tyronextian/api_infra_base:log_20250305_79eb0b0
+    container_name: backend_api
+    restart: always
+    ports:
+      - 8000:8000
+    volumes:
+      - ./data/backend_api/log:/code/log
+    env_file:
+      - .env.dev
+
+  promtail:
+    image: grafana/promtail:2.8.0
+    container_name: promtail
+    volumes:
+      - ./data/backend_api/log:/var/log/flask:rw
+      - ./conf/promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
+  loki:
+    image: grafana/loki:2.8.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/tmp/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - loki
+
+volumes:
+  loki-data:
