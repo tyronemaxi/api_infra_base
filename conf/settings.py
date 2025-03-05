@@ -56,5 +56,5 @@ ENABLE_QW_LOGIN = True if os.getenv("ENABLE_QW_LOGIN") == "True" else False
 JWT_AUTH_VERSION = os.getenv("JWT_AUTH_VERSION")
 
 # [openai]
-api_base = os.getenv("api_base")
-api_key = os.getenv("api_key")
+OPENAI_API_BASE = os.getenv("OPENAI_API_BASE")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
